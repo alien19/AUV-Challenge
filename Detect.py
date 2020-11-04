@@ -72,14 +72,15 @@ for i in range(x,x+500):
     minLineLength=100
     lines = cv2.HoughLinesP(image=edges22,rho=1,theta=np.pi/180, threshold=50,lines=np.array([]), minLineLength=minLineLength,maxLineGap=90)
     a,b,c = lines.shape
-    
-    
+
     for i in range(a):
         #Search For the Vertical Lines 
         if abs(lines[i][0][1] - lines[i][0][3]) > 5 and abs(lines[i][0][0] - lines[i][0][2]) < 20:
-             cv2.line(CheckUnderLine, (lines[i][0][0], lines[i][0][1]), (lines[i][0][2], lines[i][0][3]), (0, 255, 0), 3, cv2.LINE_8)
+             cv2.line(CheckUnderLine, (lines[i][0][0], lines[i][0][1]), (lines[i][0][2], lines[i][0][3]), (0, 255, 0), 3, cv2.LINE_AA)
              
-             print("Finlayyyyyy")
+
+             # Get the lower point and save it
+
              
         #cv2.line(CheckUnderLine, (lines[i][0][0], lines[i][0][1]), (lines[i][0][2], lines[i][0][3]), (0, 0, 255), 3, cv2.LINE_AA)
 
