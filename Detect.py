@@ -56,7 +56,7 @@ for NIMG in range(x,x+500):
     print("Number of contours = " + str(len(contours)),)
     
     #Draw The Longest Contour
-    cv2.drawContours(frame, cntsSorted[-1], -1, (0, 0, 0), 3)
+   # cv2.drawContours(frame, cntsSorted[-1], -1, (0, 0, 0), 3)
  
  
     # then apply fitline() function
@@ -65,83 +65,83 @@ for NIMG in range(x,x+500):
 # Now find two extreme points on the line to draw line
     lefty = int((-x*vy/vx) + y)
     righty = int(((gray.shape[1]-x)*vy/vx)+y)
-# 
-    (x, y, w, h) = cv2.boundingRect(cntsSorted[-1])
-#Finally draw the line
-    cv2.line(frame,(gray.shape[1]-1,righty),(0,lefty),255,2)
-   # crop = frame[y:y+h+20,x-30:x+w]
+
+  #  (x, y, w, h) = cv2.boundingRect(cntsSorted[-1])
+    #Finally draw the line
+    cv2.line(frame,(gray.shape[1]-1,righty),(0,lefty),(0,0,0),1)
+    
     cv2.imshow('Line',frame)
-    print((gray.shape[1]-1,righty))
-    print((0,lefty))
+    
     ######################################## 
-    vertical = np.copy(Original)
+    
     
     CheckUnderLine = gray[righty-5: , : ]
     
+    ###############################################################################################################################
     
     edges22 = cv2.Canny(CheckUnderLine,10,20,apertureSize = 3)
-   # cv2.imshow("Yalaaaa" , edges22)
-    minLineLength=100
-    lines = cv2.HoughLinesP(image=edges22,rho=1,theta=np.pi/180, threshold=50,lines=np.array([]), minLineLength=minLineLength,maxLineGap=90)
+   
+   
+    lines = cv2.HoughLinesP(image=edges22,rho=1,theta=np.pi/180, threshold=50,lines=np.array([]), minLineLength=100,maxLineGap=90)
     a,b,c = lines.shape
     Vert_Line = np.zeros((2,4) , dtype='i')
     TempLine = np.zeros((1,4))
     RefLine = np.zeros((1,4))
-    count1,count2,count  = 0 ,0 ,0  # To count Vertical Lines to get Avg
+    CountVert1,CountVert2,count  = 0 ,0 ,0     # To count Vertical Lines to get Avg
     Width = 0
     for i in range(a):
         # Search For the Vertical Lines 
         # We Sum up all the Possible X,Y coords and then we take the Avg 
         if abs(lines[i][0][1] - lines[i][0][3]) > 5 and abs(lines[i][0][0] - lines[i][0][2]) < 20:
-            #cv2.line(CheckUnderLine, (lines[i][0][0], lines[i][0][1]), (lines[i][0][2], lines[i][0][3]), (255, 255, 255), 3, cv2.LINE_AA)
             count = count+1
             TempLine = BotPointThenUpper(lines[i][0])
-           
               # First Line 
             if Vert_Line[0][0] == 0 and  Vert_Line[0][1] == 0:
                 #To get The bottom Point
                  Vert_Line[0] = TempLine
                  RefLine = TempLine
-                 count1 = count1 + 1
-                 print("Init")
+                 CountVert1 = CountVert1 + 1
+
             # Check the variance of the Horizontal axis to get the other vertical line
             elif abs(TempLine[0] - RefLine[0]) > 50:
                 Vert_Line[1] =  Vert_Line[1] + TempLine
-                count2 = count2 + 1
-                print("N7yat tnya")
+                CountVert2 = CountVert2 + 1
+            
                # Width = abs(Vert_Line[0][0] - Vert_Line[1][0])
             else :    
                 Vert_Line[0] =  Vert_Line[0] +TempLine
-                count1 = count1 + 1
-                print("Tb3na")
+                CountVert1 = CountVert1 + 1
+            
             
   
  #Create The best two Vertical lines based on the avg
-
-    Vert_Line[0] = (Vert_Line[0]/count1)            
-    Vert_Line[1] = (Vert_Line[1]/count2)
-              
-    Width = math.ceil(abs(Vert_Line[0][0] - Vert_Line[1][0]))   
+    Vert_Line[0] = (Vert_Line[0]/CountVert1)            
+    Vert_Line[1] = (Vert_Line[1]/CountVert2)
+# 1/5 of the total Width
+    Width = math.ceil(abs(Vert_Line[0][0] - Vert_Line[1][0]) / 5 )   
     if Vert_Line[0][0] >  Vert_Line[1][0] : 
-        cv2.line(CheckUnderLine, (Vert_Line[1][0], Vert_Line[1][1]), (Vert_Line[1][0] + Width, Vert_Line[1][1]), (255, 255, 255), 3, cv2.LINE_AA)
+        cv2.line(frame, (Vert_Line[1][0], Vert_Line[1][1]+righty-5), (Vert_Line[1][0] + Width, Vert_Line[1][1]+righty-5), (255, 255, 255), 3, cv2.LINE_AA)
     else : 
-        cv2.line(CheckUnderLine, (Vert_Line[0][0], Vert_Line[0][1]), (Vert_Line[0][0] + Width, Vert_Line[0][1]), (255, 255, 255), 3, cv2.LINE_AA)
-        
-    cv2.line(CheckUnderLine, (Vert_Line[0][0], Vert_Line[0][1]), (Vert_Line[0][2], Vert_Line[0][3]), (0, 0, 255), 3, cv2.LINE_AA)
-    cv2.line(CheckUnderLine, (Vert_Line[1][0], Vert_Line[1][1]), (Vert_Line[1][2], Vert_Line[1][3]), (0, 0, 255), 3, cv2.LINE_AA)
+        cv2.line(frame, (Vert_Line[0][0], Vert_Line[0][1]+righty-5), (Vert_Line[0][0] + Width, Vert_Line[0][1]+righty-5), (255, 255, 255), 3, cv2.LINE_AA)
+     
+    # 2 Vertical Lines    
+    cv2.line(frame, (Vert_Line[0][0], Vert_Line[0][1]+righty-5), (Vert_Line[0][2], Vert_Line[0][3]+righty-5), (0, 0, 255), 3, cv2.LINE_AA)
+    cv2.line(frame, (Vert_Line[1][0], Vert_Line[1][1]+righty-5), (Vert_Line[1][2], Vert_Line[1][3]+righty-5), (0, 0, 255), 3, cv2.LINE_AA)
+    # 1 Horizontal Line
+    cv2.line(frame, (Vert_Line[1][0], righty), (Vert_Line[0][0], righty), (0, 0, 255), 3, cv2.LINE_AA)
+ 
     cv2.imshow("Last" , CheckUnderLine)
     #Draw Rect for The Longest Contour 
-    
-    cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255),2)
-    
-  #  print(cv2.arcLength(cntsSorted[-2],True))
-    cv2.drawContours(frame, cntsSorted[-9:-2], -1, (0, 255, 0), 3)
-  #Crop
-   
-   # cv2.imshow("Crr" , new_img)
+
+    #cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255),2)
+    ###############################################################################################################################
+ 
+
+
+
+ 
     cv2.imshow("Img" , frame)
-   # cv2.imshow("Orgggg" , Original)
-    #cv2.imshow("Img2" , frame2)
+
     key = cv2.waitKey(0) & 0xFF
     if key == ord('s'):
         cv2.imwrite("NewImg.jpg",new_img)
