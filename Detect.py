@@ -3,17 +3,17 @@ import math
 import cv2
 import numpy as np
 import time
-start_time = time.time()
+
 
 
 # Function Takes 2 points and rearrange them 
 def BotPointThenUpper (Line):
     #Compare Y values to get the Bot point first
      if Line[1] > Line[3] : 
-        print( Line[0] , Line[1] , Line[2],Line[3] )
+       # print( Line[0] , Line[1] , Line[2],Line[3] )
         return  [Line[0] , Line[1] , Line[2],Line[3]]   
      else :
-        print( Line[2] , Line[3] , Line[0],Line[1] )
+       # print( Line[2] , Line[3] , Line[0],Line[1] )
         return [Line[2] , Line[3] , Line[0] , Line[1]]
 
 # Function Takes 2Lines A(o1,p1) B(o2,p2) and return True if Intersected and the X,Y Coodrs of the Intersection
@@ -35,9 +35,9 @@ def TwoLineIntersection( o1,  p1,  o2,  p2):
 def DetectGate(Original):
     frame = np.copy(Original)
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    d = dict()
+
 # __________Filters_____________
-    cv2.imshow("Original" , frame)
+   # cv2.imshow("Original" , frame)
     ret = cv2.adaptiveThreshold(gray,255 ,cv2.ADAPTIVE_THRESH_MEAN_C , cv2.THRESH_BINARY , 9,2)
     median = cv2.medianBlur(ret,5)
     kernel= np.ones((5,5),np.float32)/25
@@ -51,7 +51,7 @@ def DetectGate(Original):
     for contour in contours:
                 (x, y, w, h) = cv2.boundingRect(contour)
                # cv2.drawContours(frame,contour, -1, (0,255, 0),1)
-                cv2.imshow('Line',frame)
+               # cv2.imshow('Line',frame)
                 # We Filter the Contour with the needed Ones
                 if h*3 < w and w > 100  and h < 80 and h > 10:
                     tempContour.append(contour)
@@ -92,11 +92,9 @@ def DetectGate(Original):
         
     # check if the horizontal line is too low
     #In the bottom 25% of the img
-    print((gray.shape[0])- (gray.shape[0]/10))
+    #print((gray.shape[0])- (gray.shape[0]/10))
     if offset > (gray.shape[0])- (gray.shape[0]*2.5/10) :
         offset = (gray.shape[0])- (gray.shape[0]*2.5/10)
-        print("Olyl awi")
-        d['flag'] = False
         return {'flag' : False , 'img' : Original , 'x' : None, 'y' : None }
 
     
@@ -147,7 +145,7 @@ def DetectGate(Original):
                # cv2.line(frame, (lines[i][0][0] , lines[i][0][1]), (lines[i][0][2] , lines[i][0][3]), (0, 255, 255), 3, cv2.LINE_AA)
              
     if CountVert1 == 0 or CountVert2 == 0:
-        print("Something is Wronge")
+      #  print("Something is Wronge")
         return {'flag' : False , 'img' : Original , 'x' : None, 'y' : None }
 #Create The best two Vertical lines based on the avg
     Vert_Line[0] = (Vert_Line[0]/CountVert1)            
@@ -166,10 +164,10 @@ def DetectGate(Original):
             
        else : 
             cv2.line(frame, (Vert_Line[0][0], Vert_Line[0][1]+offset),(r_V1[0],r_V1[1]), (0, 0, 100), 3, cv2.LINE_AA)
-            print("V1 = " + str(math.sqrt( ((r_V1[0]-x)**2)+((r_V1[1]-y)**2) )))
+            #print("V1 = " + str(math.sqrt( ((r_V1[0]-x)**2)+((r_V1[1]-y)**2) )))
     cv2.line(frame, (x,y),(r_V1[0],r_V1[1]), (0, 200, 100), 3, cv2.LINE_AA)
-    cv2.imshow("Last2121212121" , frame)
-    cv2.waitKey(0)    
+   # cv2.imshow("Last2121212121" , frame)
+     
         # Vertical Line { 2 }   with Contour Line      
     p1_V2 = np.array([ Vert_Line[1][0]  , Vert_Line[1][1]+offset ])   
     o1_V2  = np.array([Vert_Line[1][2] ,Vert_Line[1][3]+offset])
@@ -179,29 +177,31 @@ def DetectGate(Original):
     if (flag_V2 == True) :
         if math.sqrt( ((r_V2[0]-x)**2)+((r_V2[1]-y)**2) ) <300 : 
             cv2.line(frame, (Vert_Line[1][0], Vert_Line[1][1]+offset),(r_V2[0],r_V2[1]), (100, 100, 255), 3, cv2.LINE_AA)
-            cv2.imshow("Last2121212121" , frame)
+           # cv2.imshow("Last2121212121" , frame)
         else : 
             cv2.line(frame, (Vert_Line[1][0], Vert_Line[1][1]+offset),(r_V2[0],r_V2[1]), (0, 0, 100), 3, cv2.LINE_AA)
-            print("V2 = " + str(math.sqrt( ((r_V2[0]-x)**2)+((r_V2[1]-y)**2) )))
+           # print("V2 = " + str(math.sqrt( ((r_V2[0]-x)**2)+((r_V2[1]-y)**2) )))
 
     
     if flag_V1 == True and flag_V2 == True : 
         cv2.line(frame, (r_V1[0],r_V1[1]),(r_V2[0],r_V2[1]), (100, 100, 255), 3, cv2.LINE_AA)
         Width = math.ceil(abs(r_V1[0] - r_V2[0]) *  .2 )   
         if r_V1[0] >  r_V2[0] : 
-             cv2.line(frame, (r_V2[0], math.ceil(abs(r_V2[1] +  Vert_Line[1][1]+offset )/2)+offset), (r_V2[0] + Width,math.ceil(abs(r_V2[1] +  Vert_Line[1][1]+offset )/2), (255, 255, 255), 3, cv2.LINE_AA)
+             cv2.line(frame, (r_V2[0], math.ceil((r_V2[1] +  Vert_Line[1][1]+offset )/2)), (r_V2[0] + Width, math.ceil((r_V2[1] +  Vert_Line[1][1]+offset )/2)), (255, 255, 255), 3, cv2.LINE_AA)
             # return True,frame, [r_V2[0] + Width , math.ceil(abs(r_V2[1] +  Vert_Line[1][1]+offset )/2]
-             return {'flag' : True , 'img' : frame , 'x' : r_V2[0] + Width  , 'y' : math.ceil(abs(r_V2[1] +  Vert_Line[1][1]+offset )/2 }
+             return {'flag' : True , 'img' : frame , 'x' : r_V2[0] + Width  , 'y' : math.ceil((r_V2[1] +  Vert_Line[1][1]+offset )/2) }
 
         else : 
-             cv2.line(frame, (r_V1[0], math.ceil(abs(r_V1[1] +  Vert_Line[0][1]+offset )/2)+offset), (r_V1[0] + Width,math.ceil(abs(r_V1[1] +  Vert_Line[0][1]+offset )/2), (255, 255, 255), 3, cv2.LINE_AA)
-            # return True,frame, [r_V1[0] + Width , math.ceil(abs(r_V1[1] +  Vert_Line[0][1]+offset )/2]
-             return {'flag' : True , 'img' : frame , 'x' : r_V1[0] + Width  , 'y' : math.ceil(abs(r_V1[1] +  Vert_Line[0][1]+offset )/2 }
+             cv2.line(frame, (r_V1[0], math.ceil((r_V1[1] +  Vert_Line[0][1]+offset )/2)), (r_V1[0] + Width, math.ceil((r_V1[1] +  Vert_Line[0][1]+offset )/2)), (255, 255, 255), 3, cv2.LINE_AA)
+             #return True,frame, [r_V1[0] + Width , math.ceil(abs(r_V1[1] +  Vert_Line[0][1]+offset )/2]
+             return {'flag' : True , 'img' : frame , 'x' : r_V1[0] + Width  , 'y' : math.ceil((r_V1[1] +  Vert_Line[0][1]+offset )/2) }
+    
+    return {'flag' : True , 'img' : Original , 'x' : None  , 'y' :None }
 
              
 
-    return False,Original,None
-    return {'flag' : True , 'img' : frame , 'x' : [r_V2[0] + Width  , 'y' : math.ceil(abs(r_V2[1] +  Vert_Line[1][1]+offset )/2 }
+    
+   # return {'flag' : True , 'img' : frame , 'x' : [r_V2[0] + Width  , 'y' : math.ceil(abs(r_V2[1] +  Vert_Line[1][1]+offset )/2 }
     #cv2.line(frame, (Vert_Line[0][0], Vert_Line[0][1]+offset), (Vert_Line[0][2], Vert_Line[0][3]+offset), (0, 0, 255), 3, cv2.LINE_AA)
     #cv2.line(frame, (Vert_Line[1][0], Vert_Line[1][1]+offset), (Vert_Line[1][2], Vert_Line[1][3]+offset), (0, 0, 255), 3, cv2.LINE_AA)
     # 1 Horizontal Line
@@ -213,21 +213,24 @@ def DetectGate(Original):
 # 250 86 65 74
 x = 1
 for NIMG in range(x,x+500):
+    start_time = time.time()
+    print("++++++++++++++++++++++++++++++++++++++++++++")
     print("E:\Courses\OpenCV Learning\Test Cases\\"+ str(NIMG) + ".jpg" )
-    
     frame = cv2.imread("E:\Courses\OpenCV Learning\Test Cases\\"+ str(NIMG) + ".jpg" ,-1)
     cv2.imshow("Img" , frame)
     result =   DetectGate(frame)
     cv2.imshow("Result" , result['img'])
+    print(result['flag'])
+    print("--- %s seconds ---" % (time.time() - start_time))
+    time.sleep(1)
+   #  key = cv2.waitKey(0) & 0xFF
 
-    key = cv2.waitKey(0) & 0xFF
-    if key == ord('s'):
-        cv2.imwrite("NewImg.jpg",new_img)
-    if key == ord('q'):
-          break
+   #  if key == ord('s'):
+   #     cv2.imwrite("NewImg.jpg",new_img)
+   # if key == ord('q'):
+   #       break
     cv2.destroyAllWindows()
 
 cv2.destroyAllWindows()
 
 
-print("--- %s seconds ---" % (time.time() - start_time))
