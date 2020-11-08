@@ -43,22 +43,24 @@ def DetectGate(Original):
     kernel= np.ones((5,5),np.float32)/25
     Filter= cv2.filter2D(median,-1 , kernel)
     edges = cv2.Canny(Filter, 10, 20)
- 
+   
+    
 # _______ Contours _____________
     contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     tempContour =  []
     #Loop throught the Contours to Find the needed ones
     for contour in contours:
                 (x, y, w, h) = cv2.boundingRect(contour)
-               # cv2.drawContours(frame,contour, -1, (0,255, 0),1)
-               # cv2.imshow('Line',frame)
+                #cv2.drawContours(frame,contour, -1, (0,255, 0),1)
+                #cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 255, 255),1)
+                # cv2.imshow('Line',frame)
                 # We Filter the Contour with the needed Ones
                 if h*3 < w and w > 100  and h < 80 and h > 10:
                     tempContour.append(contour)
-                    cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 255, 255),2)
+                   # cv2.rectangle(frame, (x, y), (x+w, y+h), (100, 100, 255),2)
    # print( "Total Contours = "+str(len(contours)))
    # print( "Target Contours = " + str(len(tempContour)))
-    
+
 # If we didnt find the needed contours return false
     if len(tempContour) == 0 :
         return {'flag' : False , 'img' : Original , 'x' : None, 'y' : None }
@@ -68,17 +70,17 @@ def DetectGate(Original):
     cntsSorted = sorted(tempContour, key=lambda x: cv2.arcLength(x,True))
     (x, y, w, h) = cv2.boundingRect(cntsSorted[-1])
     #Draw the Best Contour 
-    cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 10, 255),2)
+   # cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 10, 255),2)
     # then apply fitline() function
     [vx,vy,x,y] = cv2.fitLine(cntsSorted[-1],cv2.DIST_L2,0,0.01,0.01)
     # Now find two extreme points on the line to draw line
     lefty = int((-x*vy/vx) + y)
     righty = int(((gray.shape[1]-x)*vy/vx)+y)
 
-
     #Finally draw the line
-    cv2.line(frame,(gray.shape[1]-1,righty),(0,lefty),(0,0,0),1)
+   # cv2.line(frame,(gray.shape[1]-1,righty),(0,lefty),(0,0,0),1)
 
+    
 # ______________Crop __________________    
     ######################################## 
     # Take the Higher Value 
@@ -92,19 +94,21 @@ def DetectGate(Original):
         
     # check if the horizontal line is too low
     #In the bottom 25% of the img
-    #print((gray.shape[0])- (gray.shape[0]/10))
+
     if offset > (gray.shape[0])- (gray.shape[0]*2.5/10) :
-        offset = (gray.shape[0])- (gray.shape[0]*2.5/10)
+   
         return {'flag' : False , 'img' : Original , 'x' : None, 'y' : None }
 
     
     offset = int(offset)
     CheckUnderLine = gray[offset: , : ]
+
     #cv2.imshow('Cropped',CheckUnderLine)
     ###############################################################################################################################
     
     edges22 = cv2.Canny(CheckUnderLine,10,20,apertureSize = 3)
     lines = cv2.HoughLinesP(image=edges22,rho=1,theta=np.pi/180, threshold=50, minLineLength=100,maxLineGap=90)
+    
    # Check if we didnt find any lines in the cropped img
     if lines is None:
         return {'flag' : False , 'img' : Original , 'x' : None, 'y' : None }
@@ -119,11 +123,11 @@ def DetectGate(Original):
     Width = 0
     for i in range(a):
         # Search For the Vertical Lines 
-        #cv2.line(frame, (lines[i][0][0] , lines[i][0][1]), (lines[i][0][2] , lines[i][0][3]), (0, 255, 255), 3, cv2.LINE_AA)
-
+       # cv2.line(frame, (lines[i][0][0] , lines[i][0][1]+offset), (lines[i][0][2] , lines[i][0][3]+offset), (0, 255, 255), 3, cv2.LINE_AA)
+        
         if abs(lines[i][0][1] - lines[i][0][3]) > 5 and abs(lines[i][0][0] - lines[i][0][2]) < 60:
             count = count+1
-           # cv2.line(frame, (lines[i][0][0] , lines[i][0][1]), (lines[i][0][2] , lines[i][0][3]), (0, 255, 255), 3, cv2.LINE_AA)
+            #cv2.line(frame, (lines[i][0][0] , lines[i][0][1]+offset), (lines[i][0][2] , lines[i][0][3]+offset), (0, 100, 255), 3, cv2.LINE_AA)
             TempLine = BotPointThenUpper(lines[i][0])
               # First Line 
             if Vert_Line[0][0] == 0 and  Vert_Line[0][1] == 0:
@@ -138,19 +142,20 @@ def DetectGate(Original):
             elif abs(TempLine[0] - RefLine[0]) > 50:
                 Vert_Line[1] =  Vert_Line[1] + TempLine
                 CountVert2 = CountVert2 + 1
-              #  cv2.line(frame, (lines[i][0][0] , lines[i][0][1]), (lines[i][0][2] , lines[i][0][3]), (255, 255, 255), 3, cv2.LINE_AA)
+                #cv2.line(frame, (lines[i][0][0] , lines[i][0][1]+offset), (lines[i][0][2] , lines[i][0][3]+offset), (50, 100, 255), 3, cv2.LINE_AA)
             else :    
                 Vert_Line[0] =  Vert_Line[0] +TempLine
                 CountVert1 = CountVert1 + 1
-               # cv2.line(frame, (lines[i][0][0] , lines[i][0][1]), (lines[i][0][2] , lines[i][0][3]), (0, 255, 255), 3, cv2.LINE_AA)
-             
+               # cv2.line(frame, (lines[i][0][0] , lines[i][0][1]+offset), (lines[i][0][2] , lines[i][0][3]+offset), (0, 255, 100), 3, cv2.LINE_AA)
+       
     if CountVert1 == 0 or CountVert2 == 0:
-      #  print("Something is Wronge")
         return {'flag' : False , 'img' : Original , 'x' : None, 'y' : None }
-#Create The best two Vertical lines based on the avg
+    #Create The best two Vertical lines based on the avg
     Vert_Line[0] = (Vert_Line[0]/CountVert1)            
     Vert_Line[1] = (Vert_Line[1]/CountVert2)
-# 1/5 of the total Width
+    
+   # cv2.line(frame, (Vert_Line[0][0] , Vert_Line[0][1]+offset), (Vert_Line[0][2] , Vert_Line[0][3]+offset), (100, 255, 100), 3, cv2.LINE_AA)
+   # cv2.line(frame, (Vert_Line[1][0] , Vert_Line[1][1]+offset), (Vert_Line[1][2] , Vert_Line[1][3]+offset), (0, 255, 100), 3, cv2.LINE_AA) 
          
     # Vertical Line { 1 }   with Contour Line
     p1_V1 = np.array([ Vert_Line[0][0]  , Vert_Line[0][1]+offset ])
@@ -158,13 +163,12 @@ def DetectGate(Original):
     p2_V1 = np.array([gray.shape[1]-1,righty])
     o2_V1 = np.array([0,lefty])
     flag_V1,r_V1 = TwoLineIntersection(o1_V1,p1_V1,p2_V1,o2_V1)
-    if (flag_V1 == True) :
+    if (flag_V1 == True):
        if math.sqrt( ((r_V1[0]-x)**2)+((r_V1[1]-y)**2) ) < 300: 
              cv2.line(frame, (Vert_Line[0][0], Vert_Line[0][1]+offset),(r_V1[0],r_V1[1]), (100, 100, 255), 3, cv2.LINE_AA)
             
        else : 
-            cv2.line(frame, (Vert_Line[0][0], Vert_Line[0][1]+offset),(r_V1[0],r_V1[1]), (0, 0, 100), 3, cv2.LINE_AA)
-            #print("V1 = " + str(math.sqrt( ((r_V1[0]-x)**2)+((r_V1[1]-y)**2) )))
+            return {'flag' : False , 'img' : Original , 'x' : None, 'y' : None }
     cv2.line(frame, (x,y),(r_V1[0],r_V1[1]), (0, 200, 100), 3, cv2.LINE_AA)
    # cv2.imshow("Last2121212121" , frame)
      
@@ -177,10 +181,10 @@ def DetectGate(Original):
     if (flag_V2 == True) :
         if math.sqrt( ((r_V2[0]-x)**2)+((r_V2[1]-y)**2) ) <300 : 
             cv2.line(frame, (Vert_Line[1][0], Vert_Line[1][1]+offset),(r_V2[0],r_V2[1]), (100, 100, 255), 3, cv2.LINE_AA)
-           # cv2.imshow("Last2121212121" , frame)
+            
         else : 
-            cv2.line(frame, (Vert_Line[1][0], Vert_Line[1][1]+offset),(r_V2[0],r_V2[1]), (0, 0, 100), 3, cv2.LINE_AA)
-           # print("V2 = " + str(math.sqrt( ((r_V2[0]-x)**2)+((r_V2[1]-y)**2) )))
+           # cv2.line(frame, (Vert_Line[1][0], Vert_Line[1][1]+offset),(r_V2[0],r_V2[1]), (0, 0, 100), 3, cv2.LINE_AA)
+            return {'flag' : False , 'img' : Original , 'x' : None, 'y' : None }
 
     
     if flag_V1 == True and flag_V2 == True : 
@@ -188,12 +192,12 @@ def DetectGate(Original):
         Width = math.ceil(abs(r_V1[0] - r_V2[0]) *  .2 )   
         if r_V1[0] >  r_V2[0] : 
              cv2.line(frame, (r_V2[0], math.ceil((r_V2[1] +  Vert_Line[1][1]+offset )/2)), (r_V2[0] + Width, math.ceil((r_V2[1] +  Vert_Line[1][1]+offset )/2)), (255, 255, 255), 3, cv2.LINE_AA)
-            # return True,frame, [r_V2[0] + Width , math.ceil(abs(r_V2[1] +  Vert_Line[1][1]+offset )/2]
+           
              return {'flag' : True , 'img' : frame , 'x' : r_V2[0] + Width  , 'y' : math.ceil((r_V2[1] +  Vert_Line[1][1]+offset )/2) }
 
         else : 
              cv2.line(frame, (r_V1[0], math.ceil((r_V1[1] +  Vert_Line[0][1]+offset )/2)), (r_V1[0] + Width, math.ceil((r_V1[1] +  Vert_Line[0][1]+offset )/2)), (255, 255, 255), 3, cv2.LINE_AA)
-             #return True,frame, [r_V1[0] + Width , math.ceil(abs(r_V1[1] +  Vert_Line[0][1]+offset )/2]
+             
              return {'flag' : True , 'img' : frame , 'x' : r_V1[0] + Width  , 'y' : math.ceil((r_V1[1] +  Vert_Line[0][1]+offset )/2) }
     
     return {'flag' : True , 'img' : Original , 'x' : None  , 'y' :None }
@@ -206,12 +210,12 @@ def DetectGate(Original):
     #cv2.line(frame, (Vert_Line[1][0], Vert_Line[1][1]+offset), (Vert_Line[1][2], Vert_Line[1][3]+offset), (0, 0, 255), 3, cv2.LINE_AA)
     # 1 Horizontal Line
     #cv2.line(frame, (Vert_Line[1][0], righty), (Vert_Line[0][0], righty), (0, 0, 255), 3, cv2.LINE_AA)
- 
+
 ###############################################################################################################################
  
 
 # 250 86 65 74
-x = 1
+x = 8
 for NIMG in range(x,x+500):
     start_time = time.time()
     print("++++++++++++++++++++++++++++++++++++++++++++")
@@ -222,13 +226,13 @@ for NIMG in range(x,x+500):
     cv2.imshow("Result" , result['img'])
     print(result['flag'])
     print("--- %s seconds ---" % (time.time() - start_time))
-    time.sleep(1)
-   #  key = cv2.waitKey(0) & 0xFF
+    #time.sleep(1)
+    key = cv2.waitKey(0) & 0xFF
 
    #  if key == ord('s'):
    #     cv2.imwrite("NewImg.jpg",new_img)
-   # if key == ord('q'):
-   #       break
+    if key == ord('q'):
+          break
     cv2.destroyAllWindows()
 
 cv2.destroyAllWindows()
