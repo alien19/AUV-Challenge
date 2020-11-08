@@ -2,6 +2,9 @@
 import math
 import cv2
 import numpy as np
+import time
+start_time = time.time()
+
 
 # Function Takes 2 points and rearrange them 
 def BotPointThenUpper (Line):
@@ -31,9 +34,8 @@ def TwoLineIntersection( o1,  p1,  o2,  p2):
 
 
 
-# 250 86
-x = 1
-
+# 250 86 65 74
+x = 1565
 for NIMG in range(x,x+500):
     print("E:\Courses\OpenCV Learning\Test Cases\\"+ str(NIMG) + ".jpg" )
     
@@ -54,13 +56,13 @@ for NIMG in range(x,x+500):
  
     # Using the Canny filter to get contours
     contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    contours2, hierarchy2 = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
     
     tempContour =  []
 
     for contour in contours:
                 (x, y, w, h) = cv2.boundingRect(contour)
-                cv2.drawContours(frame,contour, -1, (0,255, 0),1)
+               # cv2.drawContours(frame,contour, -1, (0,255, 0),1)
                 cv2.imshow('Line',frame)
                 # We Filter the Contour with the needed Ones
                 if h*3 < w and w > 100  and h < 80 and h > 10:
@@ -74,14 +76,14 @@ for NIMG in range(x,x+500):
     print( "Target Contours = " + str(len(tempContour)))
     
     if len(tempContour) == 0 :
-        print("Hahahahahahha")
+        cv2.waitKey(0)
         continue
         
     # Sort By Arc Lenght and draw the Longest Contour
     cntsSorted = sorted(tempContour, key=lambda x: cv2.arcLength(x,True))
     (x, y, w, h) = cv2.boundingRect(cntsSorted[-1])
-    cv2.rectangle(frame, (x, y), (x+w, y+h), (100, 150, 255),2)
- 
+    cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 10, 255),2)
+    
     # then apply fitline() function
     [vx,vy,x,y] = cv2.fitLine(cntsSorted[-1],cv2.DIST_L2,0,0.01,0.01)
 
@@ -89,7 +91,7 @@ for NIMG in range(x,x+500):
     lefty = int((-x*vy/vx) + y)
     righty = int(((gray.shape[1]-x)*vy/vx)+y)
 
-  #  (x, y, w, h) = cv2.boundingRect(cntsSorted[-1])
+
     #Finally draw the line
     cv2.line(frame,(gray.shape[1]-1,righty),(0,lefty),(0,0,0),1)
     cv2.imshow("AGHAHA" , frame)
@@ -176,21 +178,43 @@ for NIMG in range(x,x+500):
         cv2.line(frame, (Vert_Line[0][0], math.ceil(abs(Vert_Line[0][1] + Vert_Line[0][3] )/2)+offset), (Vert_Line[0][0] + Width, math.ceil(abs(Vert_Line[0][1] + Vert_Line[0][3] )/2)+offset), (255, 255, 255), 3, cv2.LINE_AA)
      
    
-    # 2 Vertical Lines    with Contour Line
-  #  p1 = np.array([ Vert_Line[0][0]  , Vert_Line[0][1]+offset ])
-  #  o1  = np.array([Vert_Line[0][2] ,Vert_Line[0][3]+offset])
-  #  p2 = np.array([gray.shape[1]-1,righty])
-  #  o2 = np.array([0,lefty])
-   
-  #  flag,r = TwoLineIntersection(o1,p1,p2,o2)
-   # if (flag == True) :
-   #     cv2.line(frame, (Vert_Line[0][0], Vert_Line[0][1]+offset),r, (100, 100, 255), 3, cv2.LINE_AA)
+    # Vertical Line { 1 }   with Contour Line
+    p1_V1 = np.array([ Vert_Line[0][0]  , Vert_Line[0][1]+offset ])
+    o1_V1  = np.array([Vert_Line[0][2] ,Vert_Line[0][3]+offset])
+    p2_V1 = np.array([gray.shape[1]-1,righty])
+    o2_V1 = np.array([0,lefty])
+    flag_V1,r_V1 = TwoLineIntersection(o1_V1,p1_V1,p2_V1,o2_V1)
+    if (flag_V1 == True) :
+       if math.sqrt( ((r_V1[0]-x)**2)+((r_V1[1]-y)**2) ) < 300: 
+             cv2.line(frame, (Vert_Line[0][0], Vert_Line[0][1]+offset),(r_V1[0],r_V1[1]), (100, 100, 255), 3, cv2.LINE_AA)
+            
+       else : 
+            cv2.line(frame, (Vert_Line[0][0], Vert_Line[0][1]+offset),(r_V1[0],r_V1[1]), (0, 0, 100), 3, cv2.LINE_AA)
+            print("V1 = " + str(math.sqrt( ((r_V1[0]-x)**2)+((r_V1[1]-y)**2) )))
+    cv2.line(frame, (x,y),(r_V1[0],r_V1[1]), (0, 200, 100), 3, cv2.LINE_AA)
+    cv2.imshow("Last2121212121" , frame)
+    cv2.waitKey(0)    
+        # Vertical Line { 2 }   with Contour Line      
+    p1_V2 = np.array([ Vert_Line[1][0]  , Vert_Line[1][1]+offset ])   
+    o1_V2  = np.array([Vert_Line[1][2] ,Vert_Line[1][3]+offset])
+    p2_V2 = np.array([gray.shape[1]-1,righty])
+    o2_V2 = np.array([0,lefty])
+    flag_V2,r_V2 = TwoLineIntersection(o1_V2,p1_V2,p2_V2,o2_V2)
+    if (flag_V2 == True) :
+        if math.sqrt( ((r_V2[0]-x)**2)+((r_V2[1]-y)**2) ) <300 : 
+            cv2.line(frame, (Vert_Line[1][0], Vert_Line[1][1]+offset),(r_V2[0],r_V2[1]), (100, 100, 255), 3, cv2.LINE_AA)
+            cv2.imshow("Last2121212121" , frame)
+        else : 
+            cv2.line(frame, (Vert_Line[1][0], Vert_Line[1][1]+offset),(r_V2[0],r_V2[1]), (0, 0, 100), 3, cv2.LINE_AA)
+            print("V2 = " + str(math.sqrt( ((r_V2[0]-x)**2)+((r_V2[1]-y)**2) )))
 
-   
-    cv2.line(frame, (Vert_Line[0][0], Vert_Line[0][1]+offset), (Vert_Line[0][2], Vert_Line[0][3]+offset), (0, 0, 255), 3, cv2.LINE_AA)
-    cv2.line(frame, (Vert_Line[1][0], Vert_Line[1][1]+offset), (Vert_Line[1][2], Vert_Line[1][3]+offset), (0, 0, 255), 3, cv2.LINE_AA)
+    
+    if flag_V1 == True and flag_V2 == True : 
+        cv2.line(frame, (r_V1[0],r_V1[1]),(r_V2[0],r_V2[1]), (100, 100, 255), 3, cv2.LINE_AA)
+    #cv2.line(frame, (Vert_Line[0][0], Vert_Line[0][1]+offset), (Vert_Line[0][2], Vert_Line[0][3]+offset), (0, 0, 255), 3, cv2.LINE_AA)
+    #cv2.line(frame, (Vert_Line[1][0], Vert_Line[1][1]+offset), (Vert_Line[1][2], Vert_Line[1][3]+offset), (0, 0, 255), 3, cv2.LINE_AA)
     # 1 Horizontal Line
-    cv2.line(frame, (Vert_Line[1][0], righty), (Vert_Line[0][0], righty), (0, 0, 255), 3, cv2.LINE_AA)
+    #cv2.line(frame, (Vert_Line[1][0], righty), (Vert_Line[0][0], righty), (0, 0, 255), 3, cv2.LINE_AA)
  
     cv2.imshow("Last" , CheckUnderLine)
     #Draw Rect for The Longest Contour 
@@ -214,3 +238,4 @@ for NIMG in range(x,x+500):
 cv2.destroyAllWindows()
 
 
+print("--- %s seconds ---" % (time.time() - start_time))

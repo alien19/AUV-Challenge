@@ -43,7 +43,7 @@ cv2.line(img , (p1[0] , p1[1] ) , (o1[0] , o1[1] ) ,(0,0,0),3)
 cv2.line(img , (p2[0] , p2[1] ) ,(o2[0] , o2[1] ) ,(0,0,0),3)
 
 Flag,r  =  intersection(o1,p1,p2,o2)
-
+cv2.line(img , (p2[0] , p2[1] ) ,(o2[0] , o2[1] ) ,(0,0,0),3)
 cv2.imshow("Hos", img)
 print(Flag)
 print(r)
