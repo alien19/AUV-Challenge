@@ -31,35 +31,23 @@ def TwoLineIntersection( o1,  p1,  o2,  p2):
     r = o1 + d1 * t1
     return True , r.astype(int)
 
-
-
-
-# 250 86 65 74
-x = 1565
-for NIMG in range(x,x+500):
-    print("E:\Courses\OpenCV Learning\Test Cases\\"+ str(NIMG) + ".jpg" )
     
-    frame = cv2.imread("E:\Courses\OpenCV Learning\Test Cases\\"+ str(NIMG) + ".jpg" ,-1)
-    Original = np.copy(frame)
+def DetectGate(Original):
+    frame = np.copy(Original)
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    
+    d = dict()
+# __________Filters_____________
     cv2.imshow("Original" , frame)
     ret = cv2.adaptiveThreshold(gray,255 ,cv2.ADAPTIVE_THRESH_MEAN_C , cv2.THRESH_BINARY , 9,2)
     median = cv2.medianBlur(ret,5)
     kernel= np.ones((5,5),np.float32)/25
-    huh = cv2.filter2D(median,-1 , kernel)
-    edges = cv2.Canny(huh, 10, 20)
+    Filter= cv2.filter2D(median,-1 , kernel)
+    edges = cv2.Canny(Filter, 10, 20)
  
- #Mlhaash lzma
-   # erosion = cv2.dilate(edges,kernel,iterations = 1)
-
- 
-    # Using the Canny filter to get contours
+# _______ Contours _____________
     contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-    
     tempContour =  []
-
+    #Loop throught the Contours to Find the needed ones
     for contour in contours:
                 (x, y, w, h) = cv2.boundingRect(contour)
                # cv2.drawContours(frame,contour, -1, (0,255, 0),1)
@@ -68,25 +56,21 @@ for NIMG in range(x,x+500):
                 if h*3 < w and w > 100  and h < 80 and h > 10:
                     tempContour.append(contour)
                     cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 255, 255),2)
-                    
-
-
-   
-    print( "Total Contours = "+str(len(contours)))
-    print( "Target Contours = " + str(len(tempContour)))
+   # print( "Total Contours = "+str(len(contours)))
+   # print( "Target Contours = " + str(len(tempContour)))
     
+# If we didnt find the needed contours return false
     if len(tempContour) == 0 :
-        cv2.waitKey(0)
-        continue
+        return {'flag' : False , 'img' : Original , 'x' : None, 'y' : None }
+
         
     # Sort By Arc Lenght and draw the Longest Contour
     cntsSorted = sorted(tempContour, key=lambda x: cv2.arcLength(x,True))
     (x, y, w, h) = cv2.boundingRect(cntsSorted[-1])
+    #Draw the Best Contour 
     cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 10, 255),2)
-    
     # then apply fitline() function
     [vx,vy,x,y] = cv2.fitLine(cntsSorted[-1],cv2.DIST_L2,0,0.01,0.01)
-
     # Now find two extreme points on the line to draw line
     lefty = int((-x*vy/vx) + y)
     righty = int(((gray.shape[1]-x)*vy/vx)+y)
@@ -94,10 +78,8 @@ for NIMG in range(x,x+500):
 
     #Finally draw the line
     cv2.line(frame,(gray.shape[1]-1,righty),(0,lefty),(0,0,0),1)
-    cv2.imshow("AGHAHA" , frame)
-   
-    cv2.imshow('Line',frame)
-    
+
+# ______________Crop __________________    
     ######################################## 
     # Take the Higher Value 
     if righty < lefty : 
@@ -108,25 +90,30 @@ for NIMG in range(x,x+500):
     if offset <0   : 
         offset = 0 
         
-    # check if the horizontal line is to low 
+    # check if the horizontal line is too low
+    #In the bottom 25% of the img
     print((gray.shape[0])- (gray.shape[0]/10))
     if offset > (gray.shape[0])- (gray.shape[0]*2.5/10) :
         offset = (gray.shape[0])- (gray.shape[0]*2.5/10)
         print("Olyl awi")
+        d['flag'] = False
+        return {'flag' : False , 'img' : Original , 'x' : None, 'y' : None }
+
+    
     offset = int(offset)
     CheckUnderLine = gray[offset: , : ]
-    cv2.imshow('Lin22211e',CheckUnderLine)
+    #cv2.imshow('Cropped',CheckUnderLine)
     ###############################################################################################################################
     
     edges22 = cv2.Canny(CheckUnderLine,10,20,apertureSize = 3)
-   
-   
     lines = cv2.HoughLinesP(image=edges22,rho=1,theta=np.pi/180, threshold=50, minLineLength=100,maxLineGap=90)
+   # Check if we didnt find any lines in the cropped img
     if lines is None:
-        print("Hhaahha")
-        print("A = " + str(a))
+        return {'flag' : False , 'img' : Original , 'x' : None, 'y' : None }
+
+    
     a,b,c = lines.shape
-    print("A = " + str(a))
+    #print("A = " + str(a))
     Vert_Line = np.zeros((2,4) , dtype='i')
     TempLine = np.zeros((1,4))
     RefLine = np.zeros((1,4))
@@ -134,10 +121,8 @@ for NIMG in range(x,x+500):
     Width = 0
     for i in range(a):
         # Search For the Vertical Lines 
-        # We Sum up all the Possible X,Y coords and then we take the Avg 
         #cv2.line(frame, (lines[i][0][0] , lines[i][0][1]), (lines[i][0][2] , lines[i][0][3]), (0, 255, 255), 3, cv2.LINE_AA)
-        
-        
+
         if abs(lines[i][0][1] - lines[i][0][3]) > 5 and abs(lines[i][0][0] - lines[i][0][2]) < 60:
             count = count+1
            # cv2.line(frame, (lines[i][0][0] , lines[i][0][1]), (lines[i][0][2] , lines[i][0][3]), (0, 255, 255), 3, cv2.LINE_AA)
@@ -151,33 +136,24 @@ for NIMG in range(x,x+500):
                  Vert_Line[0] = TempLine
                  RefLine = TempLine
                  CountVert1 = CountVert1 + 1
-            # Check the variance of the Horizontal axis to get the other vertical line
+        # Check the variance of the Horizontal axis to get the other vertical line
             elif abs(TempLine[0] - RefLine[0]) > 50:
                 Vert_Line[1] =  Vert_Line[1] + TempLine
                 CountVert2 = CountVert2 + 1
               #  cv2.line(frame, (lines[i][0][0] , lines[i][0][1]), (lines[i][0][2] , lines[i][0][3]), (255, 255, 255), 3, cv2.LINE_AA)
-               # Width = abs(Vert_Line[0][0] - Vert_Line[1][0])
             else :    
                 Vert_Line[0] =  Vert_Line[0] +TempLine
                 CountVert1 = CountVert1 + 1
                # cv2.line(frame, (lines[i][0][0] , lines[i][0][1]), (lines[i][0][2] , lines[i][0][3]), (0, 255, 255), 3, cv2.LINE_AA)
              
-         
-    print("_______________________________")
-    print(count)
     if CountVert1 == 0 or CountVert2 == 0:
         print("Something is Wronge")
- #Create The best two Vertical lines based on the avg
+        return {'flag' : False , 'img' : Original , 'x' : None, 'y' : None }
+#Create The best two Vertical lines based on the avg
     Vert_Line[0] = (Vert_Line[0]/CountVert1)            
     Vert_Line[1] = (Vert_Line[1]/CountVert2)
 # 1/5 of the total Width
-    Width = math.ceil(abs(Vert_Line[0][0] - Vert_Line[1][0]) *  .2 )   
-    if Vert_Line[0][0] >  Vert_Line[1][0] : 
-        cv2.line(frame, (Vert_Line[1][0], math.ceil(abs(Vert_Line[1][1] + Vert_Line[1][3] )/2)+offset), (Vert_Line[1][0] + Width, math.ceil(abs(Vert_Line[1][1] + Vert_Line[1][3] )/2)+offset), (255, 255, 255), 3, cv2.LINE_AA)
-    else : 
-        cv2.line(frame, (Vert_Line[0][0], math.ceil(abs(Vert_Line[0][1] + Vert_Line[0][3] )/2)+offset), (Vert_Line[0][0] + Width, math.ceil(abs(Vert_Line[0][1] + Vert_Line[0][3] )/2)+offset), (255, 255, 255), 3, cv2.LINE_AA)
-     
-   
+         
     # Vertical Line { 1 }   with Contour Line
     p1_V1 = np.array([ Vert_Line[0][0]  , Vert_Line[0][1]+offset ])
     o1_V1  = np.array([Vert_Line[0][2] ,Vert_Line[0][3]+offset])
@@ -211,22 +187,38 @@ for NIMG in range(x,x+500):
     
     if flag_V1 == True and flag_V2 == True : 
         cv2.line(frame, (r_V1[0],r_V1[1]),(r_V2[0],r_V2[1]), (100, 100, 255), 3, cv2.LINE_AA)
+        Width = math.ceil(abs(r_V1[0] - r_V2[0]) *  .2 )   
+        if r_V1[0] >  r_V2[0] : 
+             cv2.line(frame, (r_V2[0], math.ceil(abs(r_V2[1] +  Vert_Line[1][1]+offset )/2)+offset), (r_V2[0] + Width,math.ceil(abs(r_V2[1] +  Vert_Line[1][1]+offset )/2), (255, 255, 255), 3, cv2.LINE_AA)
+            # return True,frame, [r_V2[0] + Width , math.ceil(abs(r_V2[1] +  Vert_Line[1][1]+offset )/2]
+             return {'flag' : True , 'img' : frame , 'x' : r_V2[0] + Width  , 'y' : math.ceil(abs(r_V2[1] +  Vert_Line[1][1]+offset )/2 }
+
+        else : 
+             cv2.line(frame, (r_V1[0], math.ceil(abs(r_V1[1] +  Vert_Line[0][1]+offset )/2)+offset), (r_V1[0] + Width,math.ceil(abs(r_V1[1] +  Vert_Line[0][1]+offset )/2), (255, 255, 255), 3, cv2.LINE_AA)
+            # return True,frame, [r_V1[0] + Width , math.ceil(abs(r_V1[1] +  Vert_Line[0][1]+offset )/2]
+             return {'flag' : True , 'img' : frame , 'x' : r_V1[0] + Width  , 'y' : math.ceil(abs(r_V1[1] +  Vert_Line[0][1]+offset )/2 }
+
+             
+
+    return False,Original,None
+    return {'flag' : True , 'img' : frame , 'x' : [r_V2[0] + Width  , 'y' : math.ceil(abs(r_V2[1] +  Vert_Line[1][1]+offset )/2 }
     #cv2.line(frame, (Vert_Line[0][0], Vert_Line[0][1]+offset), (Vert_Line[0][2], Vert_Line[0][3]+offset), (0, 0, 255), 3, cv2.LINE_AA)
     #cv2.line(frame, (Vert_Line[1][0], Vert_Line[1][1]+offset), (Vert_Line[1][2], Vert_Line[1][3]+offset), (0, 0, 255), 3, cv2.LINE_AA)
     # 1 Horizontal Line
     #cv2.line(frame, (Vert_Line[1][0], righty), (Vert_Line[0][0], righty), (0, 0, 255), 3, cv2.LINE_AA)
  
-    cv2.imshow("Last" , CheckUnderLine)
-    #Draw Rect for The Longest Contour 
-
-    #cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255),2)
-    ###############################################################################################################################
+###############################################################################################################################
  
 
-
-
- 
+# 250 86 65 74
+x = 1
+for NIMG in range(x,x+500):
+    print("E:\Courses\OpenCV Learning\Test Cases\\"+ str(NIMG) + ".jpg" )
+    
+    frame = cv2.imread("E:\Courses\OpenCV Learning\Test Cases\\"+ str(NIMG) + ".jpg" ,-1)
     cv2.imshow("Img" , frame)
+    result =   DetectGate(frame)
+    cv2.imshow("Result" , result['img'])
 
     key = cv2.waitKey(0) & 0xFF
     if key == ord('s'):
