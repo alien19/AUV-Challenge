@@ -3,8 +3,9 @@ import math
 import cv2
 import numpy as np
 
-
+# Function Takes 2 points and rearrange them 
 def BotPointThenUpper (Line):
+    #Compare Y values to get the Bot point first
      if Line[1] > Line[3] : 
         print( Line[0] , Line[1] , Line[2],Line[3] )
         return  [Line[0] , Line[1] , Line[2],Line[3]]   
@@ -12,11 +13,26 @@ def BotPointThenUpper (Line):
         print( Line[2] , Line[3] , Line[0],Line[1] )
         return [Line[2] , Line[3] , Line[0] , Line[1]]
 
-    
+# Function Takes 2Lines A(o1,p1) B(o2,p2) and return True if Intersected and the X,Y Coodrs of the Intersection
+def TwoLineIntersection( o1,  p1,  o2,  p2):
+
+    x = o2 - o1
+    d1 = p1 - o1
+    d2 = p2 - o2
+
+    cross =  d1[0]*d2[1] - d1[1]*d2[0]
+    if abs(cross) < 1e-8 : 
+        return False ,[0,0]
+
+    t1 = (x[0]* d2[1] - x[1] * d2[0])/cross
+    r = o1 + d1 * t1
+    return True , r.astype(int)
 
 
 
-x =1
+
+# 250 86
+x = 1
 
 for NIMG in range(x,x+500):
     print("E:\Courses\OpenCV Learning\Test Cases\\"+ str(NIMG) + ".jpg" )
@@ -34,7 +50,7 @@ for NIMG in range(x,x+500):
  
  #Mlhaash lzma
    # erosion = cv2.dilate(edges,kernel,iterations = 1)
-    
+
  
     # Using the Canny filter to get contours
     contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -53,20 +69,18 @@ for NIMG in range(x,x+500):
                     
 
 
-    # Sort By Lenght
-    print(len(tempContour))
+   
+    print( "Total Contours = "+str(len(contours)))
+    print( "Target Contours = " + str(len(tempContour)))
     
     if len(tempContour) == 0 :
         print("Hahahahahahha")
         continue
         
-
+    # Sort By Arc Lenght and draw the Longest Contour
     cntsSorted = sorted(tempContour, key=lambda x: cv2.arcLength(x,True))
     (x, y, w, h) = cv2.boundingRect(cntsSorted[-1])
     cv2.rectangle(frame, (x, y), (x+w, y+h), (100, 150, 255),2)
-    
-    
-    #Draw The Longest Contour
  
     # then apply fitline() function
     [vx,vy,x,y] = cv2.fitLine(cntsSorted[-1],cv2.DIST_L2,0,0.01,0.01)
@@ -81,12 +95,23 @@ for NIMG in range(x,x+500):
     cv2.imshow("AGHAHA" , frame)
    
     cv2.imshow('Line',frame)
- 
-    ######################################## 
-    offset = righty-5
-    if offset <0 : 
-        offset = 0 
     
+    ######################################## 
+    # Take the Higher Value 
+    if righty < lefty : 
+        offset = righty-5
+    else :
+        offset = lefty-5
+         
+    if offset <0   : 
+        offset = 0 
+        
+    # check if the horizontal line is to low 
+    print((gray.shape[0])- (gray.shape[0]/10))
+    if offset > (gray.shape[0])- (gray.shape[0]*2.5/10) :
+        offset = (gray.shape[0])- (gray.shape[0]*2.5/10)
+        print("Olyl awi")
+    offset = int(offset)
     CheckUnderLine = gray[offset: , : ]
     cv2.imshow('Lin22211e',CheckUnderLine)
     ###############################################################################################################################
@@ -109,27 +134,33 @@ for NIMG in range(x,x+500):
         # Search For the Vertical Lines 
         # We Sum up all the Possible X,Y coords and then we take the Avg 
         #cv2.line(frame, (lines[i][0][0] , lines[i][0][1]), (lines[i][0][2] , lines[i][0][3]), (0, 255, 255), 3, cv2.LINE_AA)
-
+        
+        
         if abs(lines[i][0][1] - lines[i][0][3]) > 5 and abs(lines[i][0][0] - lines[i][0][2]) < 60:
             count = count+1
+           # cv2.line(frame, (lines[i][0][0] , lines[i][0][1]), (lines[i][0][2] , lines[i][0][3]), (0, 255, 255), 3, cv2.LINE_AA)
             TempLine = BotPointThenUpper(lines[i][0])
               # First Line 
             if Vert_Line[0][0] == 0 and  Vert_Line[0][1] == 0:
                 #To get The bottom Point
+                 #if abs(TempLine[2] - (offset +5)) > 100:
+                   # cv2.line(frame, (lines[i][0][0] , lines[i][0][1]), (lines[i][0][2] , lines[i][0][3]), (255, 255, 255), 3, cv2.LINE_AA)
+                   # continue
                  Vert_Line[0] = TempLine
                  RefLine = TempLine
                  CountVert1 = CountVert1 + 1
-
             # Check the variance of the Horizontal axis to get the other vertical line
             elif abs(TempLine[0] - RefLine[0]) > 50:
                 Vert_Line[1] =  Vert_Line[1] + TempLine
                 CountVert2 = CountVert2 + 1
-            
+              #  cv2.line(frame, (lines[i][0][0] , lines[i][0][1]), (lines[i][0][2] , lines[i][0][3]), (255, 255, 255), 3, cv2.LINE_AA)
                # Width = abs(Vert_Line[0][0] - Vert_Line[1][0])
             else :    
                 Vert_Line[0] =  Vert_Line[0] +TempLine
                 CountVert1 = CountVert1 + 1
-            
+               # cv2.line(frame, (lines[i][0][0] , lines[i][0][1]), (lines[i][0][2] , lines[i][0][3]), (0, 255, 255), 3, cv2.LINE_AA)
+             
+         
     print("_______________________________")
     print(count)
     if CountVert1 == 0 or CountVert2 == 0:
@@ -140,13 +171,24 @@ for NIMG in range(x,x+500):
 # 1/5 of the total Width
     Width = math.ceil(abs(Vert_Line[0][0] - Vert_Line[1][0]) *  .2 )   
     if Vert_Line[0][0] >  Vert_Line[1][0] : 
-        cv2.line(frame, (Vert_Line[1][0], math.ceil(abs(Vert_Line[1][1] + Vert_Line[1][3] )/2)+righty-5), (Vert_Line[1][0] + Width, math.ceil(abs(Vert_Line[1][1] + Vert_Line[1][3] )/2)+righty-5), (255, 255, 255), 3, cv2.LINE_AA)
+        cv2.line(frame, (Vert_Line[1][0], math.ceil(abs(Vert_Line[1][1] + Vert_Line[1][3] )/2)+offset), (Vert_Line[1][0] + Width, math.ceil(abs(Vert_Line[1][1] + Vert_Line[1][3] )/2)+offset), (255, 255, 255), 3, cv2.LINE_AA)
     else : 
-        cv2.line(frame, (Vert_Line[0][0], math.ceil(abs(Vert_Line[0][1] + Vert_Line[0][3] )/2)+righty-5), (Vert_Line[0][0] + Width, math.ceil(abs(Vert_Line[0][1] + Vert_Line[0][3] )/2)+righty-5), (255, 255, 255), 3, cv2.LINE_AA)
+        cv2.line(frame, (Vert_Line[0][0], math.ceil(abs(Vert_Line[0][1] + Vert_Line[0][3] )/2)+offset), (Vert_Line[0][0] + Width, math.ceil(abs(Vert_Line[0][1] + Vert_Line[0][3] )/2)+offset), (255, 255, 255), 3, cv2.LINE_AA)
      
-    # 2 Vertical Lines    
-    cv2.line(frame, (Vert_Line[0][0], Vert_Line[0][1]+righty-5), (Vert_Line[0][2], Vert_Line[0][3]+righty-5), (0, 0, 255), 3, cv2.LINE_AA)
-    cv2.line(frame, (Vert_Line[1][0], Vert_Line[1][1]+righty-5), (Vert_Line[1][2], Vert_Line[1][3]+righty-5), (0, 0, 255), 3, cv2.LINE_AA)
+   
+    # 2 Vertical Lines    with Contour Line
+  #  p1 = np.array([ Vert_Line[0][0]  , Vert_Line[0][1]+offset ])
+  #  o1  = np.array([Vert_Line[0][2] ,Vert_Line[0][3]+offset])
+  #  p2 = np.array([gray.shape[1]-1,righty])
+  #  o2 = np.array([0,lefty])
+   
+  #  flag,r = TwoLineIntersection(o1,p1,p2,o2)
+   # if (flag == True) :
+   #     cv2.line(frame, (Vert_Line[0][0], Vert_Line[0][1]+offset),r, (100, 100, 255), 3, cv2.LINE_AA)
+
+   
+    cv2.line(frame, (Vert_Line[0][0], Vert_Line[0][1]+offset), (Vert_Line[0][2], Vert_Line[0][3]+offset), (0, 0, 255), 3, cv2.LINE_AA)
+    cv2.line(frame, (Vert_Line[1][0], Vert_Line[1][1]+offset), (Vert_Line[1][2], Vert_Line[1][3]+offset), (0, 0, 255), 3, cv2.LINE_AA)
     # 1 Horizontal Line
     cv2.line(frame, (Vert_Line[1][0], righty), (Vert_Line[0][0], righty), (0, 0, 255), 3, cv2.LINE_AA)
  
