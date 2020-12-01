@@ -6,7 +6,7 @@ Simple computer-vision-based approach for mimicking some of the RoboSub's compet
 - Proposed approach for:
   - Gate detection
   - Buoys detection
-  - Buoys colors detection|
+  - Buoys colors detection
 
 ## Required packages
 Numpy
